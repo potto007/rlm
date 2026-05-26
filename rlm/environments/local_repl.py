@@ -162,6 +162,7 @@ class LocalREPL(NonIsolatedEnv):
         custom_sub_tools: dict[str, Any] | None = None,
         compaction: bool = False,
         max_concurrent_subcalls: int = 4,
+        max_output_chars: int | None = None,
         **kwargs,
     ):
         super().__init__(
@@ -171,6 +172,7 @@ class LocalREPL(NonIsolatedEnv):
             **kwargs,
         )
 
+        self.max_output_chars = max_output_chars
         self.lm_handler_address = lm_handler_address
         self.subcall_fn = subcall_fn  # Callback for recursive RLM calls (depth > 1 support)
         self.original_cwd = os.getcwd()
@@ -569,6 +571,11 @@ class LocalREPL(NonIsolatedEnv):
             except Exception as e:
                 stdout = stdout_buf.getvalue()
                 stderr = stderr_buf.getvalue() + f"\n{type(e).__name__}: {e}"
+
+        if self.max_output_chars and len(stdout) > self.max_output_chars:
+            stdout = stdout[:self.max_output_chars] + (
+                "\n[OUTPUT TRUNCATED - use llm_query() to analyze large text]"
+            )
 
         final_answer = self._last_final_answer
         self._last_final_answer = None
