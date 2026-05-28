@@ -74,6 +74,7 @@ class RLM:
         on_subcall_complete: Callable[[int, str, float, str | None], None] | None = None,
         on_iteration_start: Callable[[int, int], None] | None = None,
         on_iteration_complete: Callable[[int, int, float], None] | None = None,
+        child_max_iterations: int | None = None,
     ):
         """
         Args:
@@ -139,6 +140,7 @@ class RLM:
         self.depth = depth
         self.max_depth = max_depth
         self.max_iterations = max_iterations
+        self.child_max_iterations = child_max_iterations if child_max_iterations is not None else max_iterations
         self.max_budget = max_budget
         self.max_timeout = max_timeout
         self.max_tokens = max_tokens
@@ -759,7 +761,8 @@ class RLM:
             environment_kwargs=self.environment_kwargs,
             depth=next_depth,
             max_depth=self.max_depth,
-            max_iterations=self.max_iterations,
+            max_iterations=self.child_max_iterations,
+            child_max_iterations=self.child_max_iterations,
             max_budget=remaining_budget,
             max_timeout=remaining_timeout,
             max_tokens=self.max_tokens,

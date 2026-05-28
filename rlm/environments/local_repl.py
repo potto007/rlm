@@ -505,13 +505,14 @@ class LocalREPL(NonIsolatedEnv):
 
     @contextmanager
     def _temp_cwd(self):
-        """Temporarily change to temp directory for execution."""
-        old_cwd = os.getcwd()
-        try:
-            os.chdir(self.temp_dir)
-            yield
-        finally:
-            os.chdir(old_cwd)
+        """Make temp directory available without changing process-global cwd.
+
+        os.chdir is process-global and races when multiple threads run
+        parallel sub-RLMs. Instead, we inject __temp_dir__ into the exec
+        namespace so code can use it if needed, but don't touch cwd.
+        """
+        self.globals["__temp_dir__"] = self.temp_dir
+        yield
 
     def _restore_scaffold(self) -> None:
         """Restore scaffold names after execution so overwrites (e.g. context = 'x') don't persist."""
