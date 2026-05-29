@@ -66,7 +66,12 @@ class OpenAIClient(BaseLM):
         self.model_total_tokens: dict[str, int] = defaultdict(int)
         self.model_costs: dict[str, float] = defaultdict(float)  # Cost in USD
 
-    def completion(self, prompt: str | list[dict[str, Any]], model: str | None = None) -> str:
+    def completion(
+        self,
+        prompt: str | list[dict[str, Any]],
+        model: str | None = None,
+        response_format: dict[str, Any] | None = None,
+    ) -> str:
         if isinstance(prompt, str):
             messages = [{"role": "user", "content": prompt}]
         elif isinstance(prompt, list) and all(isinstance(item, dict) for item in prompt):
@@ -82,8 +87,14 @@ class OpenAIClient(BaseLM):
         if self.client.base_url == DEFAULT_PRIME_INTELLECT_BASE_URL:
             extra_body["usage"] = {"include": True}
 
+        # Optional structured output (OpenAI / LM Studio json_schema). Pass-through so any
+        # OpenAI-compatible backend that supports response_format can be used for typed I/O.
+        create_kwargs: dict[str, Any] = {}
+        if response_format is not None:
+            create_kwargs["response_format"] = response_format
+
         response = self.client.chat.completions.create(
-            model=model, messages=messages, extra_body=extra_body
+            model=model, messages=messages, extra_body=extra_body, **create_kwargs
         )
         self._track_cost(response, model)
         return response.choices[0].message.content

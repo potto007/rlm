@@ -75,6 +75,7 @@ class RLM:
         on_iteration_start: Callable[[int, int], None] | None = None,
         on_iteration_complete: Callable[[int, int, float], None] | None = None,
         child_max_iterations: int | None = None,
+        child_system_prompt: str | None = None,
     ):
         """
         Args:
@@ -146,6 +147,7 @@ class RLM:
         self.max_tokens = max_tokens
         self.max_errors = max_errors
         self.system_prompt = custom_system_prompt if custom_system_prompt else RLM_SYSTEM_PROMPT
+        self.child_system_prompt = child_system_prompt
         self.logger = logger
         self.verbose = VerbosePrinter(enabled=verbose)
 
@@ -767,7 +769,8 @@ class RLM:
             max_timeout=remaining_timeout,
             max_tokens=self.max_tokens,
             max_errors=self.max_errors,
-            custom_system_prompt=self.system_prompt,
+            custom_system_prompt=self.child_system_prompt if self.child_system_prompt else self.system_prompt,
+            child_system_prompt=self.child_system_prompt,
             other_backends=self.other_backends,
             other_backend_kwargs=self.other_backend_kwargs,
             # Give child its own logger so its trajectory is captured in metadata
